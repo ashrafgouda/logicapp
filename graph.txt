@@ -1,0 +1,7 @@
+https://graph.microsoft.com/v1.0/users/?$select=displayName,mail,lastPasswordChangeDateTime
+
+
+
+
+
+
