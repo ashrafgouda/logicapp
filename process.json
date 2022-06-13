@@ -202,9 +202,9 @@
             "inputs": {
                 "authentication": {
                     "audience": "https://graph.microsoft.com/",
-                    "clientId": "ea65b9aa-1ecd-40fc-84a2-d38b5cfae025",
-                    "secret": "Rw68Q~sCDg4EGpqllkXnT77yUgU5bydBrzGV1dyI",
-                    "tenant": "474f21f5-e014-4d7b-8133-16bcf3b2d042",
+                    "clientId": "test",
+                    "secret": "test",
+                    "tenant": "test",
                     "type": "ActiveDirectoryOAuth"
                 },
                 "headers": {
