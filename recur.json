@@ -18,4 +18,5 @@
     },
     "name": "Recurrence",
     "type": "Microsoft.Logic/workflows/triggers"
+    
 }
