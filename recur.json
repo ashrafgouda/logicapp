@@ -1,0 +1,21 @@
+{
+    "id": "/subscriptions/896115e2-04d6-424e-94ad-0c12fe8e435f/resourceGroups/mubadala/providers/Microsoft.Logic/workflows/mubadalapass/triggers/Recurrence",
+    "provisioningState": "Succeeded",
+    "createdTime": "2022-06-09T12:49:59.966Z",
+    "changedTime": "2022-06-13T11:51:49.665Z",
+    "state": "Enabled",
+    "status": "Waiting",
+    "lastExecutionTime": "2022-06-13T11:51:49.577Z",
+    "nextExecutionTime": "2022-06-14T11:51:49.655Z",
+    "recurrence": {
+        "frequency": "Day",
+        "interval": 1
+    },
+    "workflow": {
+        "id": "/subscriptions/896115e2-04d6-424e-94ad-0c12fe8e435f/resourceGroups/mubadala/providers/Microsoft.Logic/workflows/mubadalapass/versions/08585465433344528005",
+        "name": "08585465433344528005",
+        "type": "Microsoft.Logic/workflows/versions"
+    },
+    "name": "Recurrence",
+    "type": "Microsoft.Logic/workflows/triggers"
+}

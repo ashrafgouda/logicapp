@@ -1,0 +1,385 @@
+{
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "$connections": {
+            "defaultValue": {},
+            "type": "Object"
+        }
+    },
+    "triggers": {
+        "Recurrence": {
+            "recurrence": {
+                "frequency": "Day",
+                "interval": 1
+            },
+            "evaluatedRecurrence": {
+                "frequency": "Day",
+                "interval": 1
+            },
+            "type": "Recurrence"
+        }
+    },
+    "actions": {
+        "For_each": {
+            "foreach": "@body('Parse_JSON')?['value']",
+            "actions": {
+                "Condition": {
+                    "actions": {
+                        "Condition_2": {
+                            "actions": {
+                                "Set_variable_4": {
+                                    "runAfter": {},
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "messagedays",
+                                        "value": "@{concat('in ',variables('daystoexpire'),' days')}"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Set_variable_5": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Set_variable_6": {
+                                        "runAfter": {},
+                                        "type": "SetVariable",
+                                        "inputs": {
+                                            "name": "messagedays",
+                                            "value": "'Today'"
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greaterOrEquals": [
+                                            "@variables('daytoexpireint')",
+                                            1
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Condition_3": {
+                            "actions": {
+                                "Send_an_email_(V2)": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "Body": "<p>Dear @{items('For_each')?['displayName']}<br>\nYour Office 365 e-mail Password will expire @{variables('messagedays')}<br>\nYou can change your password through the Office 365 web portal.<br>\nIf you need instructions on how to access the portal, please contact the administrator.<br>\n<br>\nThank you,<br>\nOffice 365 Administrator<br>\n</p>",
+                                            "Subject": "your password will expire @{variables('messagedays')}",
+                                            "To": "@{items('For_each')?['mail']}"
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['office365']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/v2/Mail"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Condition_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greaterOrEquals": [
+                                            "@variables('daytoexpireint')",
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "less": [
+                                            "@variables('daytoexpireint')",
+                                            "@variables('expireindays')"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Set_variable": {
+                            "runAfter": {},
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "lastPasswordChangeDateTime",
+                                "value": "@items('For_each')?['lastPasswordChangeDateTime']"
+                            }
+                        },
+                        "Set_variable_2": {
+                            "runAfter": {
+                                "Set_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "expiration",
+                                "value": "@{addDays(variables('lastPasswordChangeDateTime'),variables('Maxpasswordage'))}"
+                            }
+                        },
+                        "Set_variable_3": {
+                            "runAfter": {
+                                "Set_variable_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "daystoexpire",
+                                "value": "@{div(sub(ticks(variables('expiration')),ticks(variables('Today'))),864000000000)}"
+                            }
+                        },
+                        "Set_variable_5": {
+                            "runAfter": {
+                                "Set_variable_3": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "SetVariable",
+                            "inputs": {
+                                "name": "daytoexpireint",
+                                "value": "@int(variables('daystoexpire'))"
+                            }
+                        }
+                    },
+                    "runAfter": {},
+                    "else": {
+                        "actions": {
+                            "Compose": {
+                                "runAfter": {},
+                                "type": "Compose",
+                                "inputs": "@items('For_each')?['displayName']"
+                            }
+                        }
+                    },
+                    "expression": {
+                        "and": [
+                            {
+                                "not": {
+                                    "equals": [
+                                        "@items('For_each')?['mail']",
+                                        null
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "type": "If"
+                }
+            },
+            "runAfter": {
+                "Parse_JSON": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Foreach",
+            "runtimeConfiguration": {
+                "concurrency": {
+                    "repetitions": 1
+                }
+            }
+        },
+        "HTTP": {
+            "runAfter": {
+                "Initialize_variable_8": [
+                    "Succeeded"
+                ]
+            },
+            "type": "Http",
+            "inputs": {
+                "authentication": {
+                    "audience": "https://graph.microsoft.com/",
+                    "clientId": "ea65b9aa-1ecd-40fc-84a2-d38b5cfae025",
+                    "secret": "Rw68Q~sCDg4EGpqllkXnT77yUgU5bydBrzGV1dyI",
+                    "tenant": "474f21f5-e014-4d7b-8133-16bcf3b2d042",
+                    "type": "ActiveDirectoryOAuth"
+                },
+                "headers": {
+                    "content-type": "application/json"
+                },
+                "method": "GET",
+                "uri": "https://graph.microsoft.com/v1.0/users/?$select=displayName,mail,lastPasswordChangeDateTime"
+            }
+        },
+        "Initialize_variable": {
+            "runAfter": {},
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "expiration",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_2": {
+            "runAfter": {
+                "Initialize_variable": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "Today",
+                        "type": "string",
+                        "value": "@{utcNow()}"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_3": {
+            "runAfter": {
+                "Initialize_variable_2": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "Maxpasswordage",
+                        "type": "integer",
+                        "value": 70
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_4": {
+            "runAfter": {
+                "Initialize_variable_3": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "lastPasswordChangeDateTime",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_5": {
+            "runAfter": {
+                "Initialize_variable_4": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "daystoexpire",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_6": {
+            "runAfter": {
+                "Initialize_variable_7": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "messagedays",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_7": {
+            "runAfter": {
+                "Initialize_variable_5": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "daytoexpireint",
+                        "type": "integer"
+                    }
+                ]
+            }
+        },
+        "Initialize_variable_8": {
+            "runAfter": {
+                "Initialize_variable_6": [
+                    "Succeeded"
+                ]
+            },
+            "type": "InitializeVariable",
+            "inputs": {
+                "variables": [
+                    {
+                        "name": "expireindays",
+                        "type": "integer",
+                        "value": 67
+                    }
+                ]
+            }
+        },
+        "Parse_JSON": {
+            "runAfter": {
+                "HTTP": [
+                    "Succeeded"
+                ]
+            },
+            "type": "ParseJson",
+            "inputs": {
+                "content": "@body('HTTP')",
+                "schema": {
+                    "properties": {
+                        "@@odata.context": {
+                            "type": "string"
+                        },
+                        "value": {
+                            "items": {
+                                "properties": {
+                                    "displayName": {
+                                        "type": "string"
+                                    },
+                                    "lastPasswordChangeDateTime": {
+                                        "type": "string"
+                                    },
+                                    "mail": {}
+                                },
+                                "required": [
+                                    "displayName",
+                                    "mail",
+                                    "lastPasswordChangeDateTime"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                }
+            }
+        }
+    },
+    "outputs": {}
+}
